@@ -1,8 +1,8 @@
 local panelpal = require "panelpal"
 local lspconfig = require "lspconfig"
-local loader = require "user-lsp.loader"
+local loader = require "lsp-config-loader.loader"
 
-local module_config = require "user-lsp.config"
+local module_config = require "lsp-config-loader.config"
 
 local M = {}
 

@@ -5,7 +5,7 @@ end
 
 local fs = vim.fs
 
-local module_config = require "user-lsp.config"
+local module_config = require "lsp-config-loader.config"
 
 local M = {}
 
