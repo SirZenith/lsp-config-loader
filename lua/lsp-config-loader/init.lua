@@ -134,7 +134,7 @@ local function hook_lspconfig()
 
                     local user_config = loader.load(
                         server,
-                        module_config.server_config[server]() or {}
+                        module_config.server_config[server]
                     )
 
                     for k, v in pairs(user_config) do

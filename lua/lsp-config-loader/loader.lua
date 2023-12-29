@@ -50,7 +50,7 @@ local function lsp_on_attach(client, bufnr)
         set("n", key, callback, opts)
     end
 
-    for _, callback in module_config.on_attach_callbacks:ipairs() do
+    for _, callback in ipairs(module_config.on_attach_callbacks) do
         callback(client, bufnr)
     end
 end
@@ -64,7 +64,7 @@ local function load_config_from_module(ls_name)
     if vim.fn.filereadable(user_config_path) == 0 then
         user_config = {}
     else
-        local ok, module = xpcall(require, debug.traceback, user_config_path)
+        local ok, module = xpcall(function() return require(user_config_path) end, debug.traceback)
         user_config = ok and module or {}
     end
 
@@ -98,7 +98,7 @@ function M.load(ls_name, user_config)
     end
 
     -- merging
-    vim.tbl_extend(
+    config = vim.tbl_extend(
         "force",
         config,
         load_config_from_module(ls_name),
