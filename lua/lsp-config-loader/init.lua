@@ -112,7 +112,11 @@ end, {
 
 -- ----------------------------------------------------------------------------
 
-function hook_lspconfig()
+local function get_name(info)
+    return type(info) == "string" and info or info[1]
+end
+
+local function hook_lspconfig()
     for _, info in ipairs(module_config.server_list) do
         if info.enable ~= false then
             local server = get_name(info)
@@ -142,10 +146,12 @@ function hook_lspconfig()
     end
 end
 
----@param option table
+---@param option? table
 function M.setup(option)
-    for k, v in pairs(vim.deepcopy(option)) do
-        module_config[k] = v
+    if type(option) == "table" then
+        for k, v in pairs(vim.deepcopy(option)) do
+            module_config[k] = v
+        end
     end
 
     hook_lspconfig()
