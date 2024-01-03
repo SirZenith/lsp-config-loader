@@ -7,6 +7,7 @@ local M = {
     format_args = {
         async = true
     },
+    keymap = {},
     kind_label = {},
     server_config = {},
     server_list = {},

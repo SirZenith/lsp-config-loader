@@ -15,38 +15,9 @@ local function lsp_on_attach(client, bufnr)
     -- Enable completion triggered by <c-x><c-o>
     vim.bo[bufnr].omnifunc = "v:lua.vim.lsp.omnifunc"
 
-    -- See `:help vim.lsp.*` for documentation on any one of following functions
-    local keymap = {
-        -- utility
-        ["<A-F>"] = function() vim.lsp.buf.format(module_config.format_args) end,
-        ["<F2>"] = vim.lsp.buf.rename,
-        ["<space>ca"] = vim.lsp.buf.code_action,
-        -- goto
-        ["gd"] = vim.lsp.buf.definition,
-        ["gD"] = vim.lsp.buf.declaration,
-        ["gr"] = vim.lsp.buf.references,
-        ["gi"] = vim.lsp.buf.implementation,
-        -- diagnostic
-        ["<A-n>"] = vim.diagnostic.goto_prev,
-        ["<A-.>"] = vim.diagnostic.goto_next,
-        ["<space>d"] = vim.diagnostic.setloclist,
-        ["<space>e"] = vim.diagnostic.open_float,
-        -- hover & detail
-        ["K"] = vim.lsp.buf.hover,
-        ["<C-k>"] = vim.lsp.buf.signature_help,
-        ["<space>D"] = vim.lsp.buf.type_definition,
-        -- workspace
-        ["<space>wa"] = vim.lsp.buf.add_workspace_folder,
-        ["<space>wr"] = vim.lsp.buf.remove_workspace_folder,
-        ["<space>wl"] = function()
-            local msg = table.concat(vim.lsp.buf.list_workspace_folders(), ",\n")
-            vim.notify(msg)
-        end,
-    }
-
     local set = vim.keymap.set
     local opts = { noremap = true, silent = true, buffer = bufnr }
-    for key, callback in pairs(keymap) do
+    for key, callback in pairs(module_config.keymap) do
         set("n", key, callback, opts)
     end
 
