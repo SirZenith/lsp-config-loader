@@ -35,7 +35,13 @@ local function load_config_from_module(ls_name)
     if vim.fn.filereadable(user_config_path) == 0 then
         user_config = {}
     else
-        local ok, module = xpcall(function() return require(user_config_path) end, debug.traceback)
+        local ok, module = xpcall(function()
+            return require(user_config_path)
+        end, function(err)
+            local thread = coroutine.running()
+            local traceback = debug.traceback(thread, err)
+            vim.notify(traceback or err, vim.log.levels.WARN)
+        end)
         user_config = ok and module or {}
     end
 
