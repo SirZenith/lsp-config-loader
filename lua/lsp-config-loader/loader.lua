@@ -3,6 +3,8 @@ if not lsp_status_ok then
     lsp_status = nil
 end
 
+local lspconfig = require "lspconfig"
+
 local fs = vim.fs
 
 local module_config = require "lsp-config-loader.config"
@@ -62,7 +64,7 @@ function M.load(ls_name, user_config)
     }
 
     -- set capabilities
-    local capabilities = {}
+    local capabilities = vim.lsp.protocol.make_client_capabilities()
     for _, cap in ipairs(module_config.capabilities_settings) do
         vim.tbl_extend("force", capabilities, cap)
     end
@@ -93,6 +95,25 @@ function M.load(ls_name, user_config)
     end
 
     return config
+end
+
+local function get_name(info)
+    return type(info) == "string" and info or info[1]
+end
+
+function M.setup_lspconfig()
+    for _, info in ipairs(module_config.server_list) do
+        if info.enable ~= false then
+            local server = get_name(info)
+
+            local user_config = M.load(
+                server,
+                module_config.server_config[server]
+            )
+
+            lspconfig[server].setup(user_config)
+        end
+    end
 end
 
 return M
