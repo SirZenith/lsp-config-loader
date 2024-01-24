@@ -66,7 +66,7 @@ function M.load(ls_name, user_config)
     -- set capabilities
     local capabilities = vim.lsp.protocol.make_client_capabilities()
     for _, cap in ipairs(module_config.capabilities_settings) do
-        vim.tbl_extend("force", capabilities, cap)
+        capabilities = vim.tbl_extend("force", capabilities, cap)
     end
     config.capabilities = capabilities
 
