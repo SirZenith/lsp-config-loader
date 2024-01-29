@@ -11,6 +11,49 @@ local module_config = require "lsp-config-loader.config"
 
 local M = {}
 
+---@param module_name string
+---@return string[]
+local function get_config_module_paths(module_name)
+    return {
+        module_name,
+        module_name .. ".lua",
+        module_name .. "/init.lua",
+    }
+end
+
+-- load module with absolute path
+local function require_absolute(module_name)
+    local errmsg = { "" }
+    local err_template = "no file '%s'"
+
+    local paths = get_config_module_paths(module_name)
+
+    for _, filename in ipairs(paths) do
+        local file = io.open(filename, "rb")
+        if file then
+            local content = assert(file:read("*a"))
+            return assert(loadstring(content, filename))
+        end
+        table.insert(errmsg, err_template:format(filename))
+    end
+
+    error(table.concat(errmsg, "\n\t"))
+end
+
+---@param module_name string
+---@return boolean
+local function check_config_module_exists(module_name)
+    local paths = get_config_module_paths(module_name)
+    local ok = false
+    for _, path in ipairs(paths) do
+        if vim.fn.filereadable(path) == 1 then
+            ok = true
+            break
+        end
+    end
+    return ok
+end
+
 ---@param client lsp.Client
 ---@param bufnr number
 local function lsp_on_attach(client, bufnr)
@@ -31,20 +74,26 @@ end
 -- Try to find config file for given language server in user config directory.
 ---@param ls_name string
 local function load_config_from_module(ls_name)
-    local user_config_path = fs.normalize(module_config.root_path) .. "/" .. ls_name .. ".lua"
+    local module_name = fs.normalize(module_config.root_path) .. "/" .. ls_name
+
+    if not check_config_module_exists(module_name) then
+        return {}
+    end
+
+    local ok, module = xpcall(
+        require_absolute,
+        function(err)
+            local traceback = debug.traceback(err)
+            vim.notify(traceback or err, vim.log.levels.WARN)
+        end,
+        module_name
+    )
 
     local user_config
-    if vim.fn.filereadable(user_config_path) == 0 then
-        user_config = {}
+    if ok then
+        user_config = module()
     else
-        local ok, module = xpcall(function()
-            return require(user_config_path)
-        end, function(err)
-            local thread = coroutine.running()
-            local traceback = debug.traceback(thread, err)
-            vim.notify(traceback or err, vim.log.levels.WARN)
-        end)
-        user_config = ok and module or {}
+        user_config = {}
     end
 
     return user_config
@@ -66,7 +115,12 @@ function M.load(ls_name, user_config)
     -- set capabilities
     local capabilities = vim.lsp.protocol.make_client_capabilities()
     for _, cap in ipairs(module_config.capabilities_settings) do
-        capabilities = vim.tbl_extend("force", capabilities, cap)
+        local cap_t = type(cap)
+        if cap_t == "table" then
+            capabilities = vim.tbl_extend("force", capabilities, cap)
+        elseif cap_t == "function" then
+            capabilities = vim.tbl_extend("force", capabilities, cap())
+        end
     end
     config.capabilities = capabilities
 
@@ -97,19 +151,23 @@ function M.load(ls_name, user_config)
     return config
 end
 
+---@param info string | lsp-config-loader.ServerSpec
+---@return string
 local function get_name(info)
     return type(info) == "string" and info or info[1]
 end
 
 function M.setup_lspconfig()
     for _, info in ipairs(module_config.server_list) do
-        if info.enable ~= false then
+        if info.enabled ~= false then
             local server = get_name(info)
 
-            local user_config = M.load(
-                server,
-                module_config.server_config[server]
-            )
+            local user_config = module_config.server_config[server]
+            if type(user_config) == "function" then
+                user_config = user_config()
+            end
+
+            user_config = M.load(server, user_config)
 
             lspconfig[server].setup(user_config)
         end
