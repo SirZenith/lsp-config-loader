@@ -6,6 +6,7 @@ end
 local lspconfig = require "lspconfig"
 
 local fs = vim.fs
+local fnamemodify = vim.fn.fnamemodify
 
 local module_config = require "lsp-config-loader.config"
 
@@ -15,9 +16,9 @@ local M = {}
 ---@return string[]
 local function get_config_module_paths(module_name)
     return {
-        module_name,
-        module_name .. ".lua",
-        module_name .. "/init.lua",
+        fnamemodify(module_name, ":p"),
+        fnamemodify(module_name .. ".lua", ":p") ,
+        fnamemodify(module_name .. "/init.lua", ":p"),
     }
 end
 
