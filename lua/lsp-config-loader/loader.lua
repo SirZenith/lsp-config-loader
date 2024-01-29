@@ -17,7 +17,7 @@ local M = {}
 local function get_config_module_paths(module_name)
     return {
         fnamemodify(module_name, ":p"),
-        fnamemodify(module_name .. ".lua", ":p") ,
+        fnamemodify(module_name .. ".lua", ":p"),
         fnamemodify(module_name .. "/init.lua", ":p"),
     }
 end
@@ -30,10 +30,12 @@ local function require_absolute(module_name)
     local paths = get_config_module_paths(module_name)
 
     for _, filename in ipairs(paths) do
-        local file = io.open(filename, "rb")
-        if file then
-            local content = assert(file:read("*a"))
-            return assert(loadstring(content, filename))
+        if vim.fn.filereadable(filename) == 1 then
+            local file = io.open(filename, "rb")
+            if file then
+                local content = assert(file:read("*a"))
+                return assert(loadstring(content, filename))
+            end
         end
         table.insert(errmsg, err_template:format(filename))
     end
