@@ -134,7 +134,7 @@ function M.load(ls_name, user_config)
     end
 
     -- merging
-    config = vim.tbl_extend(
+    config = vim.tbl_deep_extend(
         "force",
         config,
         load_config_from_module(ls_name),
