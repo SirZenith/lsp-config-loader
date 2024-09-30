@@ -14,10 +14,17 @@ local M = {
     -- LSP debug mode log content display method
     log_update_method = "append",
     log_scroll_method = "bottom",
+    -- Whether to turn on inlay hint feature when a buffer is attached to LSP
+    -- client.
+    -- Can be either a boolean value or a function that takes client object and
+    -- buffer number then returns a boolean.
+    -- This option does noting when language server does not support inlay hint.
+    ---@type boolean | fun(client: vim.lsp.Client, bufnr: integer): boolean
+    use_inlay_hint = false,
     -- On attach callbask listed here will be called after keymap setup, and
     -- before on_attach in server specific config gets call.
     -- These callbacks apply to all client.
-    ---@type (fun(client: lsp.Client, bufnr: integer))[]
+    ---@type (fun(client: vim.lsp.Client, bufnr: integer))[]
     on_attach_callbacks = {},
     -- Capability tables or functions that return capability table.
     -- Capability here will be merged into NeoVim's default capability.

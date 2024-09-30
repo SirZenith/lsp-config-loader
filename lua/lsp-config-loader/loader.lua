@@ -1,4 +1,5 @@
 local lsp_status_ok, lsp_status = pcall(require, "lsp-status")
+local config                    = require("lsp-config-loader.config")
 if not lsp_status_ok then
     lsp_status = nil
 end
@@ -57,7 +58,28 @@ local function check_config_module_exists(module_name)
     return ok
 end
 
----@param client lsp.Client
+-- Tries turning inlay hint on according to user setting.
+---@param client vim.lsp.Client
+---@param bufnr integer
+local function try_turn_on_inlay_hint(client, bufnr)
+    if not client.server_capabilities.inlayHintProvider then
+        return
+    end
+
+    local checker = config.use_inlay_hint
+    local checker_type = type(checker)
+
+    local is_on = false
+    if checker_type == "boolean" then
+        is_on = checker
+    elseif checker_type == "function" then
+        is_on = checker(client, bufnr)
+    end
+
+    vim.lsp.inlay_hint.enable(is_on, { bufnr = bufnr })
+end
+
+---@param client vim.lsp.Client
 ---@param bufnr number
 local function lsp_on_attach(client, bufnr)
     -- Enable completion triggered by <c-x><c-o>
@@ -68,6 +90,8 @@ local function lsp_on_attach(client, bufnr)
     for key, callback in pairs(module_config.keymap) do
         set("n", key, callback, opts)
     end
+
+    try_turn_on_inlay_hint(client, bufnr)
 
     for _, callback in ipairs(module_config.on_attach_callbacks) do
         callback(client, bufnr)
