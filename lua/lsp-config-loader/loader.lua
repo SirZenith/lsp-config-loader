@@ -184,7 +184,8 @@ function M.setup_lspconfig()
 
             user_config = M.load(server, user_config)
 
-            vim.lsp.enable(server, user_config)
+            vim.lsp.enable(server)
+            vim.lsp.config(server, user_config)
         end
     end
 end
