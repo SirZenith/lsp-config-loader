@@ -1,10 +1,4 @@
-local lsp_status_ok, lsp_status = pcall(require, "lsp-status")
-local config                    = require("lsp-config-loader.config")
-if not lsp_status_ok then
-    lsp_status = nil
-end
-
-local lspconfig = require "lspconfig"
+local config = require("lsp-config-loader.config")
 
 local fs = vim.fs
 local fnamemodify = vim.fn.fnamemodify
@@ -133,7 +127,7 @@ end
 ---@param user_config? table
 ---@return table
 function M.load(ls_name, user_config)
-    local config = {
+    local ls_config = {
         flags = {
             debounce_text_changes = 150,
         },
@@ -149,25 +143,19 @@ function M.load(ls_name, user_config)
             capabilities = vim.tbl_extend("force", capabilities, cap())
         end
     end
-    config.capabilities = capabilities
-
-    -- lsp status plugin hook
-    local ext = lsp_status and lsp_status.extensions[ls_name]
-    if ext then
-        config.handlers = ext.setup()
-    end
+    ls_config.capabilities = capabilities
 
     -- merging
-    config = vim.tbl_deep_extend(
+    ls_config = vim.tbl_deep_extend(
         "force",
-        config,
+        ls_config,
         load_config_from_module(ls_name),
         user_config or {}
     )
 
     -- wrapping on_attach
-    local on_attach = config.on_attach
-    config.on_attach = function(client, bufnr)
+    local on_attach = ls_config.on_attach
+    ls_config.on_attach = function(client, bufnr)
         lsp_on_attach(client, bufnr)
 
         if type(on_attach) == 'function' then
@@ -175,7 +163,7 @@ function M.load(ls_name, user_config)
         end
     end
 
-    return config
+    return ls_config
 end
 
 ---@param info string | lsp-config-loader.ServerSpec
@@ -196,7 +184,7 @@ function M.setup_lspconfig()
 
             user_config = M.load(server, user_config)
 
-            lspconfig[server].setup(user_config)
+            vim.lsp.enable(server, user_config)
         end
     end
 end
